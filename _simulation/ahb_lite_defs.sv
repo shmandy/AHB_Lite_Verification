@@ -27,8 +27,8 @@ package ahb_lite_defs;
 	// Testbench Configuration //
 	/////////////////////////////
 	
-	parameter CLOCK_PERIOD		=	20;		// Test bench Clock Period
-	
+	parameter CLOCK_PERIOD	=	10;		// Test bench Clock Period - SIMULATION MODE
+	parameter CLOCK_DC	=	5;		// Internally-generated clock duty-cycle (1/2 period) - EMULATION MODE
 	
 
 	//////////////////////////////////

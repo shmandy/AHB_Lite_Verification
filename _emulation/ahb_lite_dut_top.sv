@@ -21,11 +21,11 @@
 //
 ////////////////////////////////////////////////////////////////
 
+import ahb_lite_defs::*; // Import package
+
 // Veloce Emulation - DUT TOP FILE
 // Requrires pragmas to expose pins.
 module ahb_lite_dut_top;
-
-	prameter CLOCK_DC = 5;		// Internally-generated clock duty-cycle (1/2 period)
 
 	// DUT TOP PRAGMA:
 	//pragma attribute ahb_lite_dut_top partition_module_xrtl

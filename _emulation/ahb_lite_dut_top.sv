@@ -38,7 +38,7 @@ module ahb_lite_dut_top;
 	ahb_lite_bus AHB_Bus(.*);
 	
 	// DUT Insance:
-	ahb_lite_slave_wrapper(
+	ahb_lite_slave_wrapper ahb_slave_i (
 		.bus_port_0(AHB_Bus.SLAVE0),
 		.bus_port_1(AHB_Bus.SLAVE1)
 		);
@@ -46,7 +46,7 @@ module ahb_lite_dut_top;
 	// Test Bench Interface (Driver)
 	ahb_lite_tb_interface tb_interface(
 		.master(AHB_Bus.MASTER),
-		.slave(AHB_BUs.DUMMY_SLAVE)
+		.slave(AHB_Bus.DUMMY_SLAVE)
 		);
 
 

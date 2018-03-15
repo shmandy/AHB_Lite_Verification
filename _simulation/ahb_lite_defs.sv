@@ -27,8 +27,8 @@ package ahb_lite_defs;
 	// Testbench Configuration //
 	/////////////////////////////
 	
-	parameter CLOCK_PERIOD		=	20;		// Test bench Clock Period
-	
+	parameter CLOCK_PERIOD		=	10;	// Test bench Clock Period
+	parameter CLOCK_DC		=	5;	// DUT TOP Clock Source DC (1/2 Period)
 	
 
 	//////////////////////////////////

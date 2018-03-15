@@ -141,11 +141,11 @@ program ahb_lite_tb_sequencer(
 			end
 			else begin	// Set remaining packets:
 				tPacket[index].HTRANS = SEQ;						// Set to SEQUENCE mode
-				tPacket[index].address = base_address + (index * 4)	// Set Incrementing addresses (WORD)
-			}
+				tPacket[index].address = base_address + (index * 4);	// Set Incrementing addresses (WORD)
+			end
 			
 			tPacket[index].HBURST = INCR;						// Set all packets to INCREMENT Burst
-			tPacket[index].HSIZE = WORD:						// Set all packets to WORD size
+			tPacket[index].HSIZE = WORD;						// Set all packets to WORD size
 			tPacket[index].HWRITE = WRITE;						// Set all to WRITE
 			
 		end
@@ -154,7 +154,7 @@ program ahb_lite_tb_sequencer(
 		// Read responses to check for possible error conditions
 		for(index = 0; index < test_packets; index++) begin
 			tb_interface.half_trx(tPacket[index]);
-			seq_check_error: assert(tPacket.HRESP != ERROR) break;	// Break loop if error occures on bus
+			seq_check_error: assert(tPacket[index].HRESP != ERROR) break;	// Break loop if error occures on bus
 		end
 		
 		// Send IDLE packet (delay on bus)

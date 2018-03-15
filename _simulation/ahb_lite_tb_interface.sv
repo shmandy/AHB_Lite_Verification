@@ -89,10 +89,10 @@ interface ahb_lite_tb_interface(
 	
 	// Task with single-cycle transtion
 	// Use for sequnces
-	task automatic half_trx( ref testdat_t test_packet);
+	task automatic half_trx( ref testdata_t test_packet );
 	
 		master_write(test_packet);		// Write data to BUS before clock
-		@(posedge master.HCLK);        	// Wait for next clock edge
+		@(posedge master.HCLK);        		// Wait for next clock edge
 		master_read(test_packet);		// Read Response
 		
 	endtask: half_trx

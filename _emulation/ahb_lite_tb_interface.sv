@@ -33,7 +33,8 @@ import ahb_lite_defs::*;	// Import definitions package
 // DUMMY_SLAVE modport - AHB Lite Slave Channel 3 (default)
 interface ahb_lite_tb_interface(
 	ahb_lite_bus.MASTER master, 
-	ahb_lite_bus.DUMMY_SLAVE slave);
+	ahb_lite_bus.DUMMY_SLAVE slave
+	);
 	// pragma attribute ahb_lite_tb_interface partition_interface_xif	
 	
 	// Drive Unused Signals to Ground (0)
@@ -41,46 +42,19 @@ interface ahb_lite_tb_interface(
 	assign master.HMASTLOCK = '0;
 	
 	
-	/********************************************************************/
-	// 			TASKS: Map MASTER bus to packet data				//
-	/********************************************************************/
-	
-	// Map a testdata_t to the master bus:
-	// No Internal Clock Signals
-	task master_write( 
-		input testdata_t test_packet
-		); // pragma tbx xtf
-		begin
-			master.HADDR = test_packet.address;		// Set Address
-			master.HWDATA = test_packet.data_out;	// Set Data
-			master.HWRITE = test_packet.HWRITE;		// Set Write Mode
-			master.HSIZE = test_packet.HSIZE;		// Set Transfer Size
-			master.HBURST = test_packet.HBURST;		// Set Burst Type
-			master.HTRANS = test_packet.HTRANS;		// Set Transfer Type
-		end
-	endtask: master_write
-	
-	
-	// Map MASTER output to a data class object
-	// No Internal Clock Signals
-	task automatic master_read(
-		ref testdata_t test_packet
-		); // pragma tbx xtf
-		begin
-			test_packet.data_out = master.HRDATA;	// Get Data Output
-			test_packet.HREADY = master.HREADY;		// Get Ready State
-			test_packet.HRESP = master.HRESP;		// Get Response
-		end
-	endtask: master_read
-
 	
 	/********************************************************************/
-	// 				TASKS: Single Transactions						//
+	// 				TASKS: Single Transactions							//
+	//																	//
+	//		Every transaction is a single in-out process				//
+	// 		All sequences are driven by the sequencer					//
+	// 		This does create additional overhead in the Emulation		//
+	//		As the TB is required to provide all data sets				//
 	/********************************************************************/
 	
 	// Task waits for a clock cycle
-	// Repalces #CLOCK_PERIOD statement for portablility
-	task automatic wait_cycle(); // pragma tbx xtf
+	// Replaces #CLOCK_PERIOD statement for portability
+	task  wait_cycle(); // pragma tbx xtf
 		begin
 			@(posedge master.HCLK);	// Wait one cycle
 		end
@@ -88,49 +62,27 @@ interface ahb_lite_tb_interface(
 	
 	// Single Transaction
 	// Actions defined by packet
-	task automatic single_trx( ref testdata_t test_packet ); // pragma tbx xtf
+	task single_trx( 
+		input testdata_bfm_t packet_in,
+		output testdata_bfm_t packet_out
+		); // pragma tbx xtf
 	
-		@(posedge master.HCLK);		// Advance Clock
-		master_write(test_packet);		// Write data to BUS
-
-		while (!master.HREADY);	    	// insert wait state till HREADY is active
+		// Load Data In:
+		master.HADDR 	<= packet_in.HADDR;			// Set Address
+		master.HWDATA 	<= packet_in.HWDATA;		// Set Data
+		master.HWRITE 	<= packet_in.HWRITE;		// Set Write Mode
+		master.HSIZE 	<= packet_in.HSIZE;			// Set Transfer Size
+		master.HBURST 	<= packet_in.HBURST;		// Set Burst Type
+		master.HTRANS 	<= packet_in.HTRANS;		// Set Transfer Type
+	
+		@(posedge master.HCLK);						// Wait one clock cycle
 		
-		@(posedge master.HCLK);        	// salve samples the information on this Clock cycle.
-		master_read(test_packet);		// Read response and get data from Slave (RAM)
-
+		// Read data out
+		packet_out 			= packet_in;			// Clone original packet
+		packet_out.HRDATA 	= master.HRDATA;		// Get Data Output
+		packet_out.HREADY 	= master.HREADY;		// Get Ready State
+		packet_out.HRESP 	= master.HRESP;			// Get Response
+		
 	endtask: single_trx
-	
-	
-	// Perform Read:
-	task automatic single_read( ref testdata_t test_packet ); // pragma tbx xtf 
-		
-		// Configure test_data input for read operation:
-		test_packet.HWRITE = READ;		// Set WRITE flag to READ
-		test_packet.HBURST = SINGLE;	// Set to Single
-		
-		// Perform Transaction
-		single_trx(test_packet);
-	
-	endtask: single_read
-	
-	
-	// Perform Write:
-	task automatic single_write( ref testdata_t test_packet ); // pragma tbx xtf 
-		
-		// Configure test_data input for read operation:
-		test_packet.HWRITE = WRITE;		// Set write enable to WRITE
-		test_packet.HBURST = SINGLE;	// Set to Single
-		
-		// Perform Transaction
-		single_trx(test_packet);
-		
-	endtask: single_write
-	
-	/********************************************************************/
-	// 				TASKS: Sequence Transactions					//
-	/********************************************************************/
-	
-	// Update with Sequence Transaction Tasks
-	
 
 endinterface: ahb_lite_tb_interface 

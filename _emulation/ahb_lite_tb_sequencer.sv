@@ -42,6 +42,7 @@ program ahb_lite_tb_sequencer(
 	int rw_index, index;							// read-write index, genral pupos index
 	testdata_t tPacket [test_packets-1:0];			// Test data elements (class objects)
 	testdata_t tIdlePacket;							// An Idle Packet
+	testdata_bfm_t temp_bfm_input;					// Temp Input Packet (packed for BFM)
 	
 	// Configure Monitoring
 	// Attach a monitor to every packet.
@@ -72,43 +73,43 @@ program ahb_lite_tb_sequencer(
 		
 		for(index = 0; index < test_packets; index++) begin
 			tPacket[index] = new();								// Initialize Packet
-			assert( tPacket[index].randomize() );				// Assert Randomize data objects
 			tPacket[index].rand_mode(1);						// Enable Randomization Calls
+			assert( tPacket[index].randomize() );				// Assert Randomize data objects
 			tPacket[index].setRandom(.constrain_range(1));		// Select Slave and Constrained location at random
 		end
 		
 		
 		// Send IDLE packet (delay on bus)
 		tb_interface.single_read(tIdlePacket);
-		
-		#CLOCK_PERIOD;	// Wait Once Cycle
+		tb_interface.wait_cycle();								// Wait one clock edge
 		
 		// Write_Then_Read Loop:
 		for(rw_index = 0; rw_index < rw_loop_max; rw_index++) begin
 			
 			// Write packet to device, then read it back
 			for(index = 0; index < test_packets; index ++) begin
-				tb_interface.single_write(tPacket[index]);
+				tb_interface.single_trx(tPacket[index].getBfmPacket(), temp_bfm_input);
+				tPacket[index].bfm_copy_from(temp_bfm_input);	// Copy returned packed structure into class object
 				check_error(tPacket[index]);
 			end
 			
 			// Read packets back and validate:
 			for(index = 0; index < test_packets; index ++) begin
-				tb_interface.single_read(tPacket[index]);
+				tb_interface.single_trx(tPacket[index].getBfmPacket(), temp_bfm_input);
+				tPacket[index].bfm_copy_from(temp_bfm_input);	// Copy returned packed structure into class object
 				single_read_valid: assert(tPacket[index].compare());
 				check_error(tPacket[index]);
 			end
 			
 			// Reset Test Data:
 			for(index = 0; index < test_packets; index++) begin
-				assert( tPacket[index].randomize() );		// Assert Randomize data objects
-				tPacket[index].setRandom(.constrain_range(1));														// Select Slave and Location at random
+				tPacket[index].setRandom(.constrain_range(1));	// Enable randomization
+				assert( tPacket[index].randomize() );			// Assert Randomize data objects
 			end
 			
 			// Send IDLE packet (delay on bus)
-			tb_interface.single_read(tIdlePacket);
-			
-			#CLOCK_PERIOD;		// Wait Before Next Round
+			tb_interface.single_trx(tIdlePacket.getBfmPacket());
+			tb_interface.wait_cycle();							// Wait Before Next Round
 			
 		end // END Read-Write Loop
 		$stop; // End Simulation
@@ -124,7 +125,7 @@ program ahb_lite_tb_sequencer(
 			if(pkt.HRESP == ERROR) begin
 				tIdlePacket.copy_from(pkt);
 				tIdlePacket.HTRANS = IDLE;
-				tb_interface.single_trx(tIdlePacket);
+				tb_interface.single_trx(tIdlePacket.getBfmPacket());
 			end
 		end
 	endtask: check_error

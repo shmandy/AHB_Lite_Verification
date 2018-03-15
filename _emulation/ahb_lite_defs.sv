@@ -157,7 +157,9 @@ package ahb_lite_defs;
 		
 		
 		// Deep copy from other object:
-		task copy_from(input testdata_t pkt);
+		task copy_from(
+			input testdata_t pkt
+			);
 			begin
 				address = pkt.address;
 				data_out = pkt.data_out;
@@ -169,6 +171,39 @@ package ahb_lite_defs;
 			end
 		endtask
 		
+		// Deep copy from other object:
+		task bfm_copy_from(
+			input testdata_bfm_t ppkt
+			);
+			begin
+				address 	= ppkt.HADDR;
+				data_out 	= ppkt.HWDATA;
+				data_in 	= ppkt.HRDATA;
+				HSIZE 		= ppkt.HSIZE;
+				HBURST 		= ppkt.HBURST;
+				HTRANS 		= ppkt.HTRANS;
+				HWRITE 		= ppkt.HWRITE;
+				HREADY 		= ppkt.HREADY;
+				HRESP  		= ppkt.HRESP;
+			end
+		endtask
+		
+		// Return a BFM Packet (packed structure)
+		function testdata_bfm_t getBfmPacket(
+			input testdata_t pkt 
+			);
+		
+			getBfmPacket.HADDR 	= pkt.address;
+			getBfmPacket.HWDATA = pkt.data_out;
+			getBfmPacket.HRDATA = pkt.data_in;
+			getBfmPacket.HSIZE	= pkt.HSIZE;
+			getBfmPacket.HWRITE	= pkt.HWRITE;
+			getBfmPacket.HTRANS	= pkt.HTRANS;
+			getBfmPacket.HBURST	= pkt.HBURST;
+			getBfmPacket.HREADY	= pkt.HREADY;
+			getBfmPacket.HRESP	= pkt.HRESP;
+			
+		endfunction: getBfmPacket
 		
 		// Set Address to Random Location
 		// Choose the Slave Address at random (0 or 1)
@@ -222,6 +257,27 @@ package ahb_lite_defs;
 		
 		
 	endclass: testdata_t
+	
+	// Packed Structure for Emulation (BFM)
+	// Data (in) Packet to BFM
+	typedef struct packed{
+		
+		// Input Data:
+		logic [AHB_ADDRWIDTH-1:0] HADDR;					// Address (HADDR)
+		logic [AHB_DATAWIDTH-1:0] HWDATA;					// Incoming Data (HRDATA)
+		
+		// Control Signals (master only) Outputs:
+		hwrite_t	HWRITE;	// Write Enable
+		hsize_t 	HSIZE;	// Transfer Size
+		hburst_t 	HBURST;	// Burst Type
+		htrans_t 	HTRANS;	// Transfer Type
+		
+		// Returned Data:
+		logic [AHB_DATAWIDTH-1:0] HRDATA;	// Incoming Data (HRDATA)
+		hready_t HREADY;					// Device Ready Signal
+		hresp_t HRESP;						// Device Response Signal
+	
+	} testdata_bfm_t;
 	
 
 endpackage: ahb_lite_defs

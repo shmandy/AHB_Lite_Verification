@@ -27,8 +27,8 @@ package ahb_lite_defs;
 	// Testbench Configuration //
 	/////////////////////////////
 	
-	parameter CLOCK_PERIOD	=	10;		// Test bench Clock Period - SIMULATION MODE
-	parameter CLOCK_DC	=	5;		// Internally-generated clock duty-cycle (1/2 period) - EMULATION MODE
+	parameter CLOCK_PERIOD		=	20;		// Test bench Clock Period
+	
 	
 
 	//////////////////////////////////
@@ -40,7 +40,7 @@ package ahb_lite_defs;
 	parameter BYTE_SIZE		= 8;			// Bits per Byte
 	parameter DATAWIDTH		= 32;		// Data word width in bits (32-bit)
 	parameter MEMDEPTH 		= 1024;		// Memory Depth (in words)
-	parameter ADDRWIDTH 	= 12;		// Data Address Width (in bits)
+	parameter ADDRWIDTH 		= 12;		// Data Address Width (in bits)
 	
 	// Slave Configuration
 	parameter MAX_WAITS		= 16;		// Maximum number of wait states before backoff
@@ -76,7 +76,7 @@ package ahb_lite_defs;
 	// AHB-Lite Burst Transfer Types (*master)
 	typedef enum logic [2:0]{
 		SINGLE 	= 3'b000,				// Single Burst
-		INCR	= 3'b001,				// Incrementing burst of undefined length	
+		INCR		= 3'b001,				// Incrementing burst of undefined length	
 		WRAP4	= 3'b010,				// 4-beat wrapping burst
 		INCR4	= 3'b011,				// 4-beat incrementing burst
 		WRAP8	= 3'b100,				// 8-beat wrapping burst

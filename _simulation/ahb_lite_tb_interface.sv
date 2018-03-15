@@ -74,6 +74,7 @@ interface ahb_lite_tb_interface(
 	endtask: master_read
 
 	
+	
 	/********************************************************************/
 	// 				TASKS: Single Transactions						//
 	/********************************************************************/
@@ -85,6 +86,16 @@ interface ahb_lite_tb_interface(
 			@(posedge master.HCLK);	// Wait one cycle
 		end
 	endtask: wait_cycle
+	
+	// Task with single-cycle transtion
+	// Use for sequnces
+	task automatic half_trx( ref testdat_t test_packet);
+	
+		master_write(test_packet);		// Write data to BUS before clock
+		@(posedge master.HCLK);        	// Wait for next clock edge
+		master_read(test_packet);		// Read Response
+		
+	endtask: half_trx
 	
 	// Single Transaction
 	// Actions defined by packet
@@ -126,11 +137,6 @@ interface ahb_lite_tb_interface(
 		
 	endtask: single_write
 	
-	/********************************************************************/
-	// 				TASKS: Sequence Transactions					//
-	/********************************************************************/
-	
-	// Update with Sequence Transaction Tasks
 	
 
 endinterface: ahb_lite_tb_interface

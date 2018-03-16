@@ -114,7 +114,28 @@ package ahb_lite_defs;
 		OKAY 	= 1'b0,					// Transfer Status is OKAY
 		ERROR	= 1'b1					// Transfer ERROR
 	}hresp_t;
-
+	
+		
+	// Packed Structure for Emulation (BFM)
+	// Data (in) Packet to BFM
+	typedef struct packed{
+		
+		// Input Data:
+		logic [AHB_ADDRWIDTH-1:0] HADDR;					// Address (HADDR)
+		logic [AHB_DATAWIDTH-1:0] HWDATA;					// Incoming Data (HRDATA)
+		
+		// Control Signals (master only) Outputs:
+		hwrite_t	HWRITE;	// Write Enable
+		hsize_t 	HSIZE;	// Transfer Size
+		hburst_t 	HBURST;	// Burst Type
+		htrans_t 	HTRANS;	// Transfer Type
+		
+		// Returned Data:
+		logic [AHB_DATAWIDTH-1:0] HRDATA;	// Incoming Data (HRDATA)
+		hready_t HREADY;					// Device Ready Signal
+		hresp_t HRESP;						// Device Response Signal
+	
+	} testdata_bfm_t;
 	
 	
 	// Test Data Class Object
@@ -189,19 +210,17 @@ package ahb_lite_defs;
 		endtask
 		
 		// Return a BFM Packet (packed structure)
-		function testdata_bfm_t getBfmPacket(
-			input testdata_t pkt 
-			);
+		function testdata_bfm_t getBfmPacket();
 		
-			getBfmPacket.HADDR 	= pkt.address;
-			getBfmPacket.HWDATA = pkt.data_out;
-			getBfmPacket.HRDATA = pkt.data_in;
-			getBfmPacket.HSIZE	= pkt.HSIZE;
-			getBfmPacket.HWRITE	= pkt.HWRITE;
-			getBfmPacket.HTRANS	= pkt.HTRANS;
-			getBfmPacket.HBURST	= pkt.HBURST;
-			getBfmPacket.HREADY	= pkt.HREADY;
-			getBfmPacket.HRESP	= pkt.HRESP;
+			getBfmPacket.HADDR 	= address;
+			getBfmPacket.HWDATA = data_out;
+			getBfmPacket.HRDATA = data_in;
+			getBfmPacket.HSIZE	= HSIZE;
+			getBfmPacket.HWRITE	= HWRITE;
+			getBfmPacket.HTRANS	= HTRANS;
+			getBfmPacket.HBURST	= HBURST;
+			getBfmPacket.HREADY	= HREADY;
+			getBfmPacket.HRESP	= HRESP;
 			
 		endfunction: getBfmPacket
 		
@@ -257,27 +276,5 @@ package ahb_lite_defs;
 		
 		
 	endclass: testdata_t
-	
-	// Packed Structure for Emulation (BFM)
-	// Data (in) Packet to BFM
-	typedef struct packed{
-		
-		// Input Data:
-		logic [AHB_ADDRWIDTH-1:0] HADDR;					// Address (HADDR)
-		logic [AHB_DATAWIDTH-1:0] HWDATA;					// Incoming Data (HRDATA)
-		
-		// Control Signals (master only) Outputs:
-		hwrite_t	HWRITE;	// Write Enable
-		hsize_t 	HSIZE;	// Transfer Size
-		hburst_t 	HBURST;	// Burst Type
-		htrans_t 	HTRANS;	// Transfer Type
-		
-		// Returned Data:
-		logic [AHB_DATAWIDTH-1:0] HRDATA;	// Incoming Data (HRDATA)
-		hready_t HREADY;					// Device Ready Signal
-		hresp_t HRESP;						// Device Response Signal
-	
-	} testdata_bfm_t;
-	
 
 endpackage: ahb_lite_defs

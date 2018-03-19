@@ -3,6 +3,7 @@
 //
 // Authors: 
 //	Andrew Elliott (andy@pdx.edu)
+//	Mohamed Abibalrekab 
 // 
 // Date: 3/13/2018
 // Version 0.2
@@ -41,6 +42,9 @@ program ahb_lite_tb_sequencer(
 	int rw_index, index;							// read-write index, genral pupos index
 	testdata_t tPacket [test_packets-1:0];			// Test data elements (class objects)
 	testdata_t tIdlePacket;							// An Idle Packet
+	logic [31:0] address_wrap;						// Wrapping Address
+	int idx;										// Beats in burst
+	int isize;										// HSIZE control
 	
 	// Configure Monitoring
 	// Attach a monitor to every packet.
@@ -159,8 +163,205 @@ program ahb_lite_tb_sequencer(
 		// Send IDLE packet (delay on bus)
 		tb_interface.single_read(tIdlePacket);
 		
+		//.................................................................................................................//	
+		//.................................................................................................................//
+		//....................................  INCR 4, 8 , 16 ...... WRITE & READ ....................... ................//
+		//.................................................................................................................//
+			// Single Write Sequnce Loop
+			// Setup Packets
+	   for (idx = 4; idx <= 16; idx = idx *2) begin 
+			  for (isize = 1; isize <= 4; isize = isize*2) begin
+				  for( index = 0; index <= idx - 1; index ++) begin
+			
+					 // "Clean Up" current packets:
+					 //tPacket[index].rand_mode(1);						// Enable Randomization Calls
+					 assert( tPacket[index].randomize() );				// Assert Randomize data objects
+					 tPacket[index].setRandom(.constrain_range(1));		// Select Slave and Constrained location at random
+				
+					 // Setup Write Packets for INCR test:
+					 if(0 == index) begin
+						  tPacket[index].address = { tPacket[index].address[31:2], 2'b00 };	// Set correct offset
+						  base_address = tPacket[index].address;	// Get base address (first packet)
+						  tPacket[index].HTRANS = NONSEQ;			// Set first in seq. to NONSEQ
+					 end
+					 else begin	// Set remaining packets:
+						  tPacket[index].HTRANS = SEQ;						// Set to SEQUENCE mode
+						  tPacket[index].address = base_address + (index * isize);	// Set Incrementing addresses (WORD)
+					 end
+					 if (idx == 4)
+						tPacket[index].HBURST = INCR4;      // Set all packets to INCREMENT 4 Burst
+					 else if (idx == 8) 
+						tPacket[index].HBURST = INCR8;						// Set all packets to INCREMENT 8 Burst
+					 else if (idx == 16)
+						tPacket[index].HBURST = INCR16;     // Set all packets to INCREMENT 16 Burst
+				
+					 if (isize == 1)
+					   tPacket[index].HSIZE = BYTE;						      // Set all packets to BYTE size
+					 else if (isize == 2)
+					   tPacket[index].HSIZE = HALFWORD;						// Set all packets to HALFWORD size
+				   else if (isize == 4)
+					tPacket[index].HSIZE = WORD;					   	// Set all packets to WORD size
+				
+					 tPacket[index].HWRITE = WRITE;						// Set all to WRITE
+				
+				   end
+				  // Write packets to interface
+				  // Read responses to check for possible error conditions
+				  for(index = 0; index < idx -1; index++) begin
+					   tb_interface.half_trx(tPacket[index]);
+					   seq_check_error1: assert(tPacket[index].HRESP != ERROR) break;	// Break loop if error occures on bus
+				  end
+				  // Send IDLE packet (delay on bus)
+				  tb_interface.single_read(tIdlePacket);
+				  
+			   end
+			end
+			
+		//........................................................Burst wrapping addresses.........................................//
+							 // test case when we have 4 beat                   
 		
-		$finish; // End Simulation
+		for( index = 0; index <= 3; index ++) begin
+				  isize = 4;   // we have Hsize = a word.
+					 // "Clean Up" current packets:
+					 //tPacket[index].rand_mode(1);						// Enable Randomization Calls
+					 assert( tPacket[index].randomize() );				// Assert Randomize data objects
+					 tPacket[index].setRandom(.constrain_range(1));		// Select Slave and Constrained location at random
+				
+					 // Setup Write Packets for INCR test:
+					 if(index == 0) begin
+						  tPacket[index].address = { tPacket[index].address[31:2], 2'b00 };	// Set correct offset
+						  base_address = tPacket[index].address;	// Get base address (first packet)
+						  address_wrap = base_address;
+						  tPacket[index].HTRANS = NONSEQ;			// Set first in seq. to NONSEQ
+					 end
+					 else begin	// Set remaining packets:
+						  tPacket[index].HTRANS = SEQ;						// Set to SEQUENCE mode
+						  address_wrap = wrap(base_address, index, isize);  // call a function to wrap the address if it excess the limit. 
+						  tPacket[index].address = address_wrap;	       // Set Incrementing addresses (WORD)
+					 end
+					 if (idx == 4)
+						tPacket[index].HBURST = INCR4;      // Set all packets to INCREMENT 4 Burst
+					 else if (idx == 8) 
+						tPacket[index].HBURST = INCR8;						// Set all packets to INCREMENT 8 Burst
+					 else if (idx == 16)
+						tPacket[index].HBURST = INCR16;     // Set all packets to INCREMENT 16 Burst
+				
+					 if (isize == 1)
+					   tPacket[index].HSIZE = BYTE;						      // Set all packets to BYTE size
+					 else if (isize == 2)
+					   tPacket[index].HSIZE = HALFWORD;						// Set all packets to HALFWORD size
+				   else if (isize == 4)
+					tPacket[index].HSIZE = WORD;					   	// Set all packets to WORD size
+				
+					 tPacket[index].HWRITE = WRITE;						// Set all to WRITE
+				
+				   end
+				  // Write packets to interface
+				  // Read responses to check for possible error conditions
+				  for(index = 0; index < idx -1; index++) begin
+					   tb_interface.half_trx(tPacket[index]);
+					   seq_check_error2: assert(tPacket[index].HRESP != ERROR) break;	// Break loop if error occures on bus
+				  end
+				  // Send IDLE packet (delay on bus)
+				  tb_interface.single_read(tIdlePacket);
+				  
+				  //--------------------------------------------- wrap 8 ------------------------------------------------------//
+				  for( index = 0; index <= 7; index ++) begin     // 8 beaats
+				  isize = 4;   // we have Hsize = a word.
+					 // "Clean Up" current packets:
+					 //tPacket[index].rand_mode(1);						// Enable Randomization Calls
+					 assert( tPacket[index].randomize() );				// Assert Randomize data objects
+					 tPacket[index].setRandom(.constrain_range(1));		// Select Slave and Constrained location at random
+				
+					 // Setup Write Packets for INCR test:
+					 if(index == 0) begin
+						  tPacket[index].address = { tPacket[index].address[31:2], 2'b00 };	// Set correct offset
+						  base_address = tPacket[index].address;	// Get base address (first packet)
+						  address_wrap = base_address;
+						  tPacket[index].HTRANS = NONSEQ;			// Set first in seq. to NONSEQ
+					 end
+					 else begin	// Set remaining packets:
+						  tPacket[index].HTRANS = SEQ;						// Set to SEQUENCE mode
+						  address_wrap = wrap(base_address, index, isize);  // call a function to wrap the address if it excess the limit. 
+						  tPacket[index].address = address_wrap;	       // Set Incrementing addresses (WORD)
+					 end
+					 if (idx == 4)
+						tPacket[index].HBURST = INCR4;      // Set all packets to INCREMENT 4 Burst
+					 else if (idx == 8) 
+						tPacket[index].HBURST = INCR8;						// Set all packets to INCREMENT 8 Burst
+					 else if (idx == 16)
+						tPacket[index].HBURST = INCR16;     // Set all packets to INCREMENT 16 Burst
+				
+					 if (isize == 1)
+					   tPacket[index].HSIZE = BYTE;						      // Set all packets to BYTE size
+					 else if (isize == 2)
+					   tPacket[index].HSIZE = HALFWORD;						// Set all packets to HALFWORD size
+				   else if (isize == 4)
+					tPacket[index].HSIZE = WORD;					   	// Set all packets to WORD size
+				
+					 tPacket[index].HWRITE = WRITE;						// Set all to WRITE
+				
+				   end
+				  // Write packets to interface
+				  // Read responses to check for possible error conditions
+				  for(index = 0; index < idx -1; index++) begin
+					   tb_interface.half_trx(tPacket[index]);
+					   seq_check_error3: assert(tPacket[index].HRESP != ERROR) break;	// Break loop if error occures on bus
+				  end
+				  // Send IDLE packet (delay on bus)
+				  tb_interface.single_read(tIdlePacket);
+				 //--------------------------------------------- wrap 16 ------------------------------------------------------//
+				 for( index = 0; index <= 15; index ++) begin     // 16 beaats
+				  isize = 4;   // we have Hsize = a word.
+					 // "Clean Up" current packets:
+					 //tPacket[index].rand_mode(1);						// Enable Randomization Calls
+					 assert( tPacket[index].randomize() );				// Assert Randomize data objects
+					 tPacket[index].setRandom(.constrain_range(1));		// Select Slave and Constrained location at random
+				
+					 // Setup Write Packets for INCR test:
+					 if(index == 0) begin
+						  tPacket[index].address = { tPacket[index].address[31:2], 2'b00 };	// Set correct offset
+						  base_address = tPacket[index].address;	// Get base address (first packet)
+						  address_wrap = base_address;
+						  tPacket[index].HTRANS = NONSEQ;			// Set first in seq. to NONSEQ
+					 end
+					 else begin	// Set remaining packets:
+						  tPacket[index].HTRANS = SEQ;						// Set to SEQUENCE mode
+						  address_wrap = wrap(base_address, index, isize);  // call a function to wrap the address if it excess the limit. 
+						  tPacket[index].address = address_wrap;	       // Set Incrementing addresses (WORD)
+					 end
+					 if (idx == 4)
+						tPacket[index].HBURST = INCR4;      // Set all packets to INCREMENT 4 Burst
+					 else if (idx == 8) 
+						tPacket[index].HBURST = INCR8;						// Set all packets to INCREMENT 8 Burst
+					 else if (idx == 16)
+						tPacket[index].HBURST = INCR16;     // Set all packets to INCREMENT 16 Burst
+				
+					 if (isize == 1)
+					   tPacket[index].HSIZE = BYTE;						      // Set all packets to BYTE size
+					 else if (isize == 2)
+					   tPacket[index].HSIZE = HALFWORD;						// Set all packets to HALFWORD size
+				   else if (isize == 4)
+					tPacket[index].HSIZE = WORD;					   	// Set all packets to WORD size
+				
+					 tPacket[index].HWRITE = WRITE;						// Set all to WRITE
+				
+				   end
+				  // Write packets to interface
+				  // Read responses to check for possible error conditions
+				  for(index = 0; index < idx -1; index++) begin
+					   tb_interface.half_trx(tPacket[index]);
+					   seq_check_error4: assert(tPacket[index].HRESP != ERROR) break;	// Break loop if error occures on bus
+				  end
+				  
+				  
+				  // Send IDLE packet (delay on bus)
+				  tb_interface.single_read(tIdlePacket);
+				  /////////////////////////////////////////////////////////// Tests Ends here//////////////////////////////////////
+
+		
+		$finish;	// End Simulation
+
 	end  
 	
 	
@@ -177,5 +378,20 @@ program ahb_lite_tb_sequencer(
 			end
 		end
 	endtask: check_error
+	
+	 // Wrapping Function (for any size)
+	function automatic wrap(
+		input logic [31:0] base_address,
+		input int index, 
+		input int isize
+		);
+		
+		logic [31:0] wrap_t;
+		if (base_address[3:0] + index * isize > 15)
+			wrap_t[31:4] = base_address[31:4];
+		else
+			wrap_t = base_address + index * isize;
+		wrap = wrap_t;
+	endfunction
   
 endprogram 

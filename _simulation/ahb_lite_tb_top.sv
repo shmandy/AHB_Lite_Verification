@@ -88,10 +88,10 @@ module ahb_lite_tb_top();
 	// Module Instantiations:
 	ahb_lite_bus AHB_Bus(.HCLK(HCLK), .HRESETn(HRESETn));			// Create AHB-Lite Interface
 	ahb_lite_slave_wrapper wrapper(.bus_port_0(AHB_Bus.SLAVE0),
-		.bus_port_1(AHB_Bus.SLAVE1));							// Create AHB-Lite Slaves and connect to ahb_interface
+		.bus_port_1(AHB_Bus.SLAVE1));								// Create AHB-Lite Slaves and connect to ahb_interface
 	ahb_lite_tb_interface tb_interface(.master(AHB_Bus.MASTER), 
-		.slave(AHB_Bus.DUMMY_SLAVE));							// Create Testbench interface, pass Testbench Modports
+		.slave(AHB_Bus.DUMMY_SLAVE));								// Create Testbench interface, pass Testbench Modports
+	ahb_monitor	tb_monitor(AHB_Bus);								// Create and attach monitor to the AHB_Lite Bus
 	ahb_lite_tb_sequencer tb_sequencer(tb_interface);				// Create an instance of the sequencer program
-	//ahb_lite_monitor	tb_monitor(AHB_Bus);					// Create and attach monitor to the AHB_Lite Bus
 
 endmodule 

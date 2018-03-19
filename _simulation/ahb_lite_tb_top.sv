@@ -30,7 +30,7 @@
 
 import ahb_lite_defs::*; // Import package
 
-`define SCOPE_INTERNAL	// Enable Exposed RAM Signals 
+// `define SCOPE_INTERNAL	// Enable Exposed RAM Signals 
 
 module ahb_lite_tb_top();
 	

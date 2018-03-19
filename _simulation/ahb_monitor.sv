@@ -13,9 +13,7 @@
 // The scoreboard is displayed at the end with all the values of the success and failures of the assertions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
+import ahb_lite_defs::*; // Import package
 
 
 module ahb_monitor(ahb_lite_bus bus);

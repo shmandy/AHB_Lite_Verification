@@ -35,7 +35,6 @@ program ahb_lite_tb_sequencer(
 	// Test Parameters
 	parameter rw_loop_max = 100;					// Perform 100 Random Read-Write Operations
 	parameter test_packets = 10;					// Array of test data packets
-	parameter SEED = 2936483;						// Random Number Generator Seed
 	
 	// Test Variables:
 	int random_data, base_address;
@@ -119,7 +118,7 @@ program ahb_lite_tb_sequencer(
 		
 		
 		/////////////////////////////////////////////////////
-		//				INCR WRITE Test				 //
+		//	 INCR WRITE Test			  // 
 		/////////////////////////////////////////////////////
 		
 		
@@ -161,7 +160,7 @@ program ahb_lite_tb_sequencer(
 		tb_interface.single_read(tIdlePacket);
 		
 		
-		$stop; // End Simulation
+		$finish; // End Simulation
 	end  
 	
 	
